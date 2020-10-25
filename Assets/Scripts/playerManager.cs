@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,7 +8,10 @@ public class playerManager : MonoBehaviour
     // Player specific variables
     private int health;
     private int score;
-
+    private list<Collectable> inventory = new List<Collectable>()
+    public Text inventoryText;
+    public Text descriptionText
+    private int currentIndex;  
     // Boolean values
     private bool isGamePaused = false;
 
@@ -39,6 +42,28 @@ public class playerManager : MonoBehaviour
     {
         healthText.text = "Health: " + health.ToString();
         scoreText.text  = "Score:  " + score.ToString();
+
+	if (inventory.Count == 0)
+	{
+	    inventoryText.text = "Current Selection: None";
+	    descriptionText.text = "";
+	}
+	else
+	{
+	    inventoryText.text = "Current Selection: " + inventory[currentIndex].collectableName + " " + currentIndex.ToString();
+	    descriptionText.text = "Press [E] to " + inventory[currentIndex].description;
+	}
+
+	if (Input.GetKeyDown(KeyCode.E))
+	{
+	     if (inventory.Count > 0)
+	     {
+		inventory[currentIndex].Use();
+		inventory.RemoveAt(currentIndex);
+		currentIndex = (currentIndex - 1) % inventory.Count;
+	     } 
+	}
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             PauseGame();

@@ -6,12 +6,9 @@ using UnityEngine.UI;
 public class playerManager : MonoBehaviour
 {
     // Player specific variables
-    private int health;
-    private int score;
-    private list<Collectable> inventory = new List<Collectable>()
-    public Text inventoryText;
-    public Text descriptionText
-    private int currentIndex;  
+    //private int health;
+    //private int score;
+
     // Boolean values
     private bool isGamePaused = false;
 
@@ -21,6 +18,15 @@ public class playerManager : MonoBehaviour
     public GameObject pauseMenu;
     public GameObject winMenu;
     public GameObject loseMenu;
+
+
+    // Inventory Stuff
+    //private List<collectable> inventory;
+    public Text inventoryText;
+    public Text descriptionText;
+    private int currentIndex;
+    
+    public PlayerINFO info;
 
     // Start is called before the first frame update
     void Start()
@@ -33,44 +39,66 @@ public class playerManager : MonoBehaviour
         FindAllMenus();
 
         //Start player with initial health and score
-        health = 100;
-        score = 0;
+        //info.health = 100;
+        //score = 0;
+
+	info = GameObject.FindWithTag("Info").GetComponent<PlayerINFO>();
+
+	foreach (collectable item in info.inventory)
+	{
+		item.player = this.gameObject;
+	}
     }
 
     // Update is called once per frame
     void Update()
     {
-        healthText.text = "Health: " + health.ToString();
-        scoreText.text  = "Score:  " + score.ToString();
-
-	if (inventory.Count == 0)
-	{
-	    inventoryText.text = "Current Selection: None";
-	    descriptionText.text = "";
-	}
-	else
-	{
-	    inventoryText.text = "Current Selection: " + inventory[currentIndex].collectableName + " " + currentIndex.ToString();
-	    descriptionText.text = "Press [E] to " + inventory[currentIndex].description;
-	}
-
-	if (Input.GetKeyDown(KeyCode.E))
-	{
-	     if (inventory.Count > 0)
-	     {
-		inventory[currentIndex].Use();
-		inventory.RemoveAt(currentIndex);
-		currentIndex = (currentIndex - 1) % inventory.Count;
-	     } 
-	}
-
+        healthText.text = "Health: " + info.health.ToString();
+        scoreText.text  = "Score:  " + info.score.ToString();
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             PauseGame();
         }
-        if (health <= 0)
+        if (info.health <= 0)
         {
             LoseGame();
+        }
+
+        // Showing Inventory
+        if (info.inventory.Count == 0)
+        {
+            inventoryText.text = "Current Selection: None";
+            descriptionText.text = "No Description";
+        }
+        else
+        {
+            inventoryText.text = "Current Selection: " + info.inventory[currentIndex].collectableName + " " + currentIndex.ToString();
+            descriptionText.text = "Press [E] to " + info.inventory[currentIndex].description;
+        }
+
+        //Use currently selected Item
+        if (info.inventory.Count > 0)
+
+        {
+            if (Input.GetKeyDown(KeyCode.E)) 
+            {
+                info.inventory[currentIndex].Use();
+                info.inventory.RemoveAt(currentIndex);
+                if (info.inventory.Count != 0)
+                {
+                    currentIndex = (currentIndex - 1) % info.inventory.Count;
+
+                }
+            }
+        }
+
+        // Switch to the next item
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            if (info.inventory.Count > 0)
+            {
+                currentIndex = (currentIndex + 1) % info.inventory.Count;
+            }
         }
     }
 
@@ -83,6 +111,14 @@ public class playerManager : MonoBehaviour
         if (scoreText == null)
         {
             scoreText = GameObject.Find("ScoreText").GetComponent<Text>();
+        }
+        if (inventoryText == null)
+        {
+            inventoryText = GameObject.Find("InventoryText").GetComponent<Text>();
+        }
+        if (descriptionText == null)
+        {
+            descriptionText = GameObject.Find("DescriptionText").GetComponent<Text>();
         }
         if (winMenu == null)
         {
@@ -133,12 +169,23 @@ public class playerManager : MonoBehaviour
 
     public void ChangeHealth(int value)
     {
-        health += value;
+        info.health += value;
     }
 
     public void ChangeScore(int value)
     {
-        score += value;
+        info.score += value;
     }
 
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        collectable item = collision.GetComponent<collectable>();
+        if (item != null)
+        {
+            item.player = this.gameObject;
+            item.transform.parent = null;
+            info.inventory.Add(item);
+            item.gameObject.SetActive(false);
+        }
+    }
 }
